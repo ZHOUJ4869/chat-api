@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jz.ai.mapper.ChatLmsMapper">
+
+    <!-- 取最旧活跃 -->
+    <select id="selectOldest" resultType="com.jz.ai.domain.entity.ChatLms">
+        SELECT * FROM chat_lms
+        WHERE chat_id = #{chatId} AND compacted = 0
+        ORDER BY id ASC
+            LIMIT #{limit}
+    </select>
+
+    <!-- 取最新活跃（用于注入/回填缓存） -->
+    <select id="selectRecent" resultType="com.jz.ai.domain.entity.ChatLms">
+        SELECT * FROM chat_lms
+        WHERE chat_id = #{chatId} AND compacted = 0
+        ORDER BY id DESC
+            LIMIT #{limit}
+    </select>
+
+    <!-- 批量归档（不删库） -->
+    <update id="markArchivedByIds">
+        UPDATE chat_lms SET compacted = 1
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </update>
+
+    <!-- （可选）统计活跃条里 RAW/MERGED 数量 -->
+    <select id="countActiveByOrigin" resultType="int">
+        SELECT COUNT(*) FROM chat_lms
+        WHERE chat_id = #{chatId} AND compacted = 0 AND origin = #{origin}
+    </select>
+
+    <!--表示计算有效的历史记忆-->
+    <select id="countByChat" resultType="int">
+        SELECT COUNT(*) FROM chat_lms WHERE chat_id = #{chatId} AND compacted = 0
+    </select>
+
+
+    <!-- 取最旧的活跃条（按覆盖时间） -->
+    <select id="selectOldestByAge" resultType="com.jz.ai.domain.entity.ChatLms">
+        SELECT *
+        FROM chat_lms
+        WHERE chat_id = #{chatId} AND compacted = 0
+        ORDER BY
+            COALESCE(window_to_ts, UNIX_TIMESTAMP(created_at) * 1000),
+            id
+            LIMIT #{limit}
+    </select>
+
+    <!-- 取最新的活跃条（用于回填 Redis 或“保留最近N条”裁剪） -->
+    <select id="selectNewestByAge" resultType="com.jz.ai.domain.entity.ChatLms">
+        SELECT *
+        FROM chat_lms
+        WHERE chat_id = #{chatId} AND compacted = 0
+        ORDER BY
+            COALESCE(window_to_ts, UNIX_TIMESTAMP(created_at) * 1000) DESC,
+            id DESC
+            LIMIT #{limit}
+    </select>
+
+
+</mapper>
