@@ -1,4 +1,8 @@
 package com.jz.ai.mapper;
 
-public interface UserProfileMapper {
-}
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.jz.ai.domain.entity.UserProfile;
+import org.apache.ibatis.annotations.Mapper;
+
+@Mapper
+public interface UserProfileMapper extends BaseMapper<UserProfile> {}

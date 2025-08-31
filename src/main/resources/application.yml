@@ -1,0 +1,163 @@
+spring:
+  profiles:
+    active: dev
+  ai:
+    dashscope:
+      api-key: sk-9da43415eac4485981ee70295f187c16
+      base-url: https://dashscope.aliyuncs.com/compatible-mode/v1
+      chat:
+        options:
+          temperature: 0.8
+          top-p: 0.8
+    vectorstore:
+      redis:
+        uri: redis://localhost:6379  #jedis自动读取
+  cache:
+    type: caffeine
+    cache-names: agents
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
+  datasource:
+    url: jdbc:mysql://192.168.1.200:3306/chat_ai?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=Asia/Shanghai&useUnicode=true
+      &characterEncoding=utf8
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  # 可选：JPA 或 MyBatis-Plus 设置
+  data:
+    redis:
+      host: 192.168.1.200
+      port: 6379
+      timeout: 3000
+      password: ''
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 控制台打印SQL
+  global-config:
+    db-config:
+      id-type: auto
+server:
+  error:
+    include-exception: true
+    include-message: always
+    include-stacktrace: ALWAYS
+logging:
+  level:
+    org.springframework.web: INFO
+    com.jz.ai: DEBUG
+
+#logging:
+#  level:
+#    # 只把 MyBatis 相关包打开到 DEBUG，其它默认 INFO
+#    org.mybatis: DEBUG
+#    com.baomidou.mybatisplus: DEBUG
+#    # 你自己的 Mapper 包
+#    com.jz.ai.mapper: DEBUG
+chat:
+  memory:
+    key-prefix: "chat:mem:" #短期记忆
+    retrieve-size: 100 #聊天时候取的历史个数<=max-messages
+    max-messages: 200 #redis存储的最多历史条数(不同模型支持的可能长度不同，可以选最长模型，retrieve-size再取模型支持的，需要根据token估计）
+    ttl-seconds: 604800  # 7天
+  profile:
+    inject: true                 # 是否把画像拼进 System Prompt
+    model: qwen-plus             # 用于画像抽取的模型（可改 qwen-max） #同时用于长期记忆摘要的模型
+    redis-key-prefix: "chat:profile:u:"
+    cache-ttl: 30d               # 画像缓存 TTL（30 天）；设空串或 0 表示不过期
+    mood-redis-key-prefix: "chat:profile:mood:"
+    mood-ttl-seconds: 1800  # 想调就改，但代码会强制 <= 1800
+    inject-mood: true
+  models:
+    registry:
+      qwen-max:
+        context-window: 32768
+        output-reserve-tokens: 8192
+      qwen-plus:
+        context-window: 131072
+        output-reserve-tokens: 32768
+      qwen-turbo:
+        context-window: 131072
+        output-reserve-tokens: 32768
+      qwen-long:
+        context-window: 10000000
+        output-reserve-tokens: 100000
+      qwen3-14b:
+        context-window: 131072
+        output-reserve-tokens: 32768
+      qwen3-32b:
+        context-window: 131072
+        output-reserve-tokens: 32768
+  lms:
+    summarizer:
+      model: qwen-plus         #长期记忆摘要使用模型
+    soft-cap-ratio: 0.8          # 软上限 = nMax * 0.8
+    ewma-alpha: 0.2              # 运行时动态平均（历史/摘要 tokens）平滑系数
+    compaction:
+      keep-recent-ratio: 0.5
+    redis:
+      key-prefix: "chat:lms:"    #长期记忆
+      recent-cache-size: 400     # Redis 仅缓存最近这么多条摘要(实际取的是软上限，是动态计算的）
+      counter-ttl-seconds: 604800
+      lock-ttl-seconds: 60
+    template:
+      max-tokens-per-item: 400   # 摘要单条目标上限
+      min-tokens-per-item: 120   # 摘要单条目标下限
+    lock:
+      renew-initial-delay-ms: 0        # 首次续期延迟
+      min-renew-interval-ms: 1000      # 最小续期间隔
+  emoji:
+    max-per-message: 2
+  moderation:
+    light-reply-floor: 35
+    mid-reply-floor: 65
+    silence-degrade-points: 10
+    boundary-degrade-points: 2
+    llm:
+      enabled: true
+      model: qwen-plus
+      timeout-ms: 1500
+      escalate-threshold: 0.85
+      redis-key-prefix: "mod:llm:"
+      cache-ttl-seconds: 86400
+  behavior-signals:
+    inject: true
+    lookback-days: 3
+    inject-only-if-present: true
+    cache-enabled: true
+    cache-ttl-seconds: 120
+    redis-key-prefix: "behv:signals:"
+    redis-index-prefix: "behv:signals:idx:"
+rapport:
+  scoring:
+    model: qwen-plus                 # 打分用哪个模型（可与主对话不同）
+    min-interval-seconds: 45         # 最小间隔
+    min-length-for-model: 15         # 文本过短不打分
+    every-n-turns: 5                 # 每 N 轮兜底评一次
+    ewma-beta: 0.5                  # 平滑系数
+    max-delta-per-turn: 8            # 单轮最大变化
+    dead-band: 1                     # 死区
+    violation-cooldown-minutes: 5    # 越界后的冷却窗口
+    cooldown-rise-cap: 2             # 冷却期内每轮最多上升
+rag:
+  redis:
+    index: product_idx
+    prefix: "product_chunk:"
+    initialize-schema: true
+  embedding:
+    model: text-embedding-v2
+  query:
+    expand-num: 3
+    per-query-topk: 4
+    sim-threshold: 0.5
+    final-topk: 6
+# application.yml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "health,info,metrics,prometheus"
+  metrics:
+    tags:
+      application: chat-api   # 统一加一个 app 标签，便于查询
+
+

@@ -1,4 +1,3 @@
 package com.jz.ai.guard;
 
-public enum BoundaryLevel {
-}
+public enum BoundaryLevel { NONE, LIGHT, MID, HEAVY }

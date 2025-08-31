@@ -36,12 +36,7 @@ public class RapportScorerProperties {
     /** 越界后冷却期（分钟），限制“突然拉高” */
     private int violationCooldownMinutes = 5;
 
-    /** 冷却期叠加的短期扣减上限 */
-    private int penaltyHoldMax = 20;
-
     /** 冷却期内每轮最多上涨阈值（例如 +2 分） */
     private int cooldownRiseCap = 2;
 
-    /** 每轮回收的 penaltyHold（逐步恢复） */
-    private int penaltyDecayPerTurn = 1;
 }

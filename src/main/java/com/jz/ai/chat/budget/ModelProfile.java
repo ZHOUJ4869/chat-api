@@ -1,4 +1,4 @@
-package com.jz.ai.chat;
+package com.jz.ai.chat.budget;
 
 
 import lombok.*;

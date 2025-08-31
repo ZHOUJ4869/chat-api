@@ -4,6 +4,7 @@ package com.jz.ai.domain.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -24,6 +25,8 @@ public class UserModerationEvent {
 
     private Integer scoreDelta;
 
+    private String categories;
+    private BigDecimal confidence;
     /** 仅存前 256 字截断文本 */
     private String messageExcerpt;
 

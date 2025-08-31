@@ -1,5 +1,5 @@
 // src/main/java/com/jz/ai/rag/ProductDictMapper.java
-package com.jz.ai.rag;
+package com.jz.ai.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Select;

@@ -5,6 +5,6 @@ import lombok.Data;
 
 @Data
 @AllArgsConstructor
-public class ChatResponse {
+public class MyChatResponse {
     private String content;
 }

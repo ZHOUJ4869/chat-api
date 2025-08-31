@@ -1,6 +1,22 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<beans xmlns="http://www.springframework.org/schema/beans"
-       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jz.ai.mapper.ChatMessageMapper">
 
-</beans>
+
+    <!-- 统计：起点（不含）之后还有多少条（可选，仅用于调试或观测） -->
+    <select id="countSinceExclusive" resultType="int">
+        SELECT COUNT(*) FROM chat_message
+        WHERE chat_id = #{chatId} AND id &gt; #{afterId}
+    </select>
+
+    <!-- 取起点（不含）之后的前 limit 条，按 id 升序（窗口） -->
+    <select id="selectSinceExclusiveAsc" resultType="com.jz.ai.domain.entity.ChatMessage">
+        SELECT * FROM chat_message
+        WHERE chat_id = #{chatId} AND id &gt; #{afterId}
+        ORDER BY id ASC
+            LIMIT #{limit}
+    </select>
+
+
+</mapper>
